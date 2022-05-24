@@ -1,0 +1,134 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<title>{{name}}</title>
+</head>
+<body>
+    <div id="reactionButtonTemplate" hidden>
+        <button class="reaction" onclick="nextAnswer('reactionID')">
+            <div class="buttonText">
+                reactionText
+            </div>
+        </button>
+    </div>
+
+    <div id="videoBlock" class="videoBlock">
+        <video id="videoElement" autoplay loop muted>
+            <source src="/static/characters/animations/{{name}}.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+    
+    <div id="conversationBlock">
+        <div id="characterSays" class="characterSays"></div>
+        <div id="userSays" class="userSays">DO NOT CLOSE IT</div>
+    </div>
+    
+
+<script>
+var conversation = {{conversation|safe}}
+var alreadySaid = []
+
+//conversation management
+function manageConversation(answerKey){
+    drawResponses(conversation[answerKey]["children"])
+    say(conversation[answerKey]["text"])
+}
+
+function drawResponses(reactionList){
+    var newUserSays = ""
+    var i = 0
+    while(i < reactionList.length){
+        reaction = reactionList[i]
+        if(!alreadySaid.includes(reaction)){
+            var reactionText = conversation[reaction]["text"]
+            newUserSays+=reactionButtonTemplate.innerHTML.replace("reactionText",reactionText).replace("reactionID",reaction)
+        }
+        i+=1
+    }
+    userSays.innerHTML=newUserSays
+    if(userSays.children.length){
+        setPosition()
+    }
+    
+    
+
+    if(userSays.innerHTML==""){
+        setTimeout(function(){
+            say(conversation["CLOSE"]["text"])
+        },15000)
+    }
+}
+
+function say(answerText){
+    characterSays.innerHTML = answerText
+}
+
+function nextAnswer(reactionID){
+    alreadySaid = alreadySaid.concat(conversation[reactionID]["synonyms"])
+    var nextAnswerID = conversation[reactionID]["children"][0]
+    manageConversation(nextAnswerID)
+}
+
+function setPosition(){
+    var windowWidth = window.innerWidth
+    var firstChild = userSays.children[0]
+    var childWidth = parseInt(getComputedStyle(firstChild).getPropertyValue("width").replace("vw",""))
+    var elemWidth = userSays.children.length*childWidth
+    userSays.style.left = String((windowWidth - elemWidth)/2)+"px"
+}
+
+manageConversation("A1")
+videoElement.setAttribute('width',String(window.innerWidth* 97/100))
+
+</script>
+<style>
+
+    body{
+        background-color: rgb(19, 17, 1);
+    }
+
+    .characterSays{
+        border-radius: 70%;
+        background-color: rgb(201 144 41);
+        color: rgb(238 236 225);
+        text-align: center;
+        padding: 3em;
+        position:fixed;
+        max-width: 20em;
+        z-index: 900;
+        top: 8vh;
+        left: 70vw;
+    }
+
+    .reaction{
+        background-color: rgb(201 144 41);
+        color: rgb(238 236 225);
+        height: 8vh;
+        width:13vw;
+        border-radius: 25%;
+    }
+
+    .buttonText{
+        position: relative;
+        height: 100%;
+        padding-top: 10%;
+        padding-bottom: 10%;
+    }
+
+    .videoBlock{
+        max-width: 100vw;
+        max-height: 97vh;
+        overflow: hidden;
+    }
+
+    .userSays{
+        position: fixed;
+        z-index: 900;
+        height: 10vh;
+        top: 90vh;
+    }
+</style>
+</body>
+</html>  
