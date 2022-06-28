@@ -2,3 +2,4 @@ static/characters/animations/*
 static/characters/conversations/json/*
 static/characters/conversations/xlsx/*
 *.pyc
+meetWith/settings.py

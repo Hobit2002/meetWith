@@ -14,7 +14,7 @@
     </div>
 
     <div id="videoBlock" class="videoBlock">
-        <video id="videoElement" autoplay loop muted>
+        <video id="videoElement" class="videoElement" autoplay loop muted>
             <source src="/static/characters/animations/{{name}}.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
@@ -22,7 +22,9 @@
     
     <div id="conversationBlock">
         <div id="characterSays" class="characterSays"></div>
-        <div id="userSays" class="userSays">DO NOT CLOSE IT</div>
+        <div id="userSaysShell" class="userSaysShell">
+            <div id="userSays" class="userSays">DO NOT CLOSE IT</div>
+        </div>
     </div>
     
 
@@ -51,14 +53,37 @@ function drawResponses(reactionList){
     if(userSays.children.length){
         setPosition()
     }
-    
-    
+    else if(checkRoot()){
+        var reactionText = conversation["BACK"]["text"]
+        reaction = "BACK"
+        userSays.innerHTML=reactionButtonTemplate.innerHTML.replace("reactionText",reactionText).replace("reactionID",reaction)
+        setPosition()
+    } 
 
     if(userSays.innerHTML==""){
+        //console.log("Length:",characterSays.innerText.length)
+        //var readingLength = characterSays.innerText.length/6/2
         setTimeout(function(){
-            say(conversation["CLOSE"]["text"])
-        },15000)
+            characterSays.hidden = true
+            setTimeout(function(){
+                characterSays.hidden = false
+                say(conversation["CLOSE"]["text"])
+            },2000)
+        },10000)
     }
+}
+
+function checkRoot(){
+    var rootQuestions = conversation["ROOT"]["children"]
+    var i = 0
+    while(i < rootQuestions.length){
+        var rootQuestion = rootQuestions[i]
+        if(!alreadySaid.includes(rootQuestion)){
+            return true
+        }
+        i+=1
+    }
+    return false
 }
 
 function say(answerText){
@@ -71,12 +96,28 @@ function nextAnswer(reactionID){
     manageConversation(nextAnswerID)
 }
 
+addEventListener('orientationchange', event => {
+    setPosition()
+});
+
 function setPosition(){
-    var windowWidth = window.innerWidth
-    var firstChild = userSays.children[0]
-    var childWidth = parseInt(getComputedStyle(firstChild).getPropertyValue("width").replace("vw",""))
-    var elemWidth = userSays.children.length*childWidth
-    userSays.style.left = String((windowWidth - elemWidth)/2)+"px"
+    if(checkVericalPhone()){
+        userSaysShell.style.left = ""
+    }
+    else{
+        var windowWidth = window.innerWidth
+        var firstChild = userSays.children[0]
+        //__WARNING__:width of reactions is hardcoded. Change CSS and whole page will break!
+        var childWidth = windowWidth/100*13//parseInt(getComputedStyle(firstChild).getPropertyValue("width").replace("vw",""))
+        var elemWidth = userSays.children.length*childWidth
+        userSaysShell.style.left = String((windowWidth - elemWidth)/2)+"px"
+    }
+}
+
+function checkVericalPhone(){
+    var isphone = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    var isevertical = screen.orientation.type=="portrait-primary"
+    return isphone && isevertical
 }
 
 manageConversation("A1")
@@ -101,7 +142,7 @@ videoElement.setAttribute('width',String(window.innerWidth* 97/100))
         top: 8vh;
         left: 70vw;
     }
-
+    /*__WARNING__:width of reactions is hardcoded. Change CSS and whole page will break!*/
     .reaction{
         background-color: rgb(201 144 41);
         color: rgb(238 236 225);
@@ -122,12 +163,57 @@ videoElement.setAttribute('width',String(window.innerWidth* 97/100))
         max-height: 97vh;
         overflow: hidden;
     }
-
-    .userSays{
+    
+    .userSaysShell{
         position: fixed;
         z-index: 900;
-        height: 10vh;
         top: 90vh;
+        max-width: 95vw;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    .userSays{
+        height: 10vh;
+    }
+
+    @media (orientation: landscape) and (hover: none) and (pointer: coarse){
+        .reaction{
+            height: 12vh;
+        }
+
+        .userSaysShell{
+            top:85vh;
+            height: 15vh;
+        }
+    }
+
+    @media (orientation: portrait) and (hover: none) and (pointer: coarse)  {
+        .videoElement{
+            width: 150vh;
+            margin-left: -60vh;
+        }
+
+        .characterSays{
+            left: 55vw;
+            font-size: 1.5vh;
+            background-color: rgba(201, 145, 41, 0.384);
+            max-width: 10em;
+            padding: 2.2em;
+        }
+
+        .reaction{
+            font-size: 1.3vh;
+            width:20vw;
+        }
+
+        .userSays{
+            width: 200vw;
+        }
+
+        .userSaysShell{
+            top: 85vh;
+        }
     }
 </style>
 </body>
