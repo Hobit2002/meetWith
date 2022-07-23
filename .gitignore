@@ -1,5 +1,6 @@
 static/characters/animations/*
 static/characters/conversations/json/*
 static/characters/conversations/xlsx/*
+static/characters/backgrounds/*
 *.pyc
 meetWith/settings.py
